@@ -22,12 +22,14 @@ predicate isSensitive(DataFlow::Node sink, SensitiveExpr::Classification type) {
   exists(SensitiveAction a | a = sink and type = SensitiveExpr::secret())
 }
 
-private class ConstComparisonExpr extends ComparisonExpr {
+class ConstComparisonExpr extends ComparisonExpr {
+  Expr constOperand;
   string constString;
 
   ConstComparisonExpr() {
+    constOperand = this.getAnOperand() and
     exists(DataFlow::Node n |
-      n.getASuccessor*() = DataFlow::exprNode(this.getAnOperand()) and
+      n.getASuccessor*() = DataFlow::exprNode(constOperand) and
       constString = n.getStringValue()
     )
   }
@@ -40,6 +42,10 @@ private class ConstComparisonExpr extends ComparisonExpr {
     constString.matches("%/") or
     constString.matches("%/%")
   }
+
+  Expr getConstOperand() { result = constOperand }
+
+  string getConstString() { result = constString }
 }
 
 /**
