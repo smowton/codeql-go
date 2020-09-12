@@ -13,6 +13,7 @@ import semmle.go.frameworks.stdlib.CompressGzip
 import semmle.go.frameworks.stdlib.CompressLzw
 import semmle.go.frameworks.stdlib.CompressZlib
 import semmle.go.frameworks.stdlib.Net
+import semmle.go.frameworks.stdlib.NetHttp
 import semmle.go.frameworks.stdlib.Path
 import semmle.go.frameworks.stdlib.PathFilepath
 import semmle.go.frameworks.stdlib.Reflect
