@@ -16,6 +16,7 @@ import semmle.go.frameworks.stdlib.Path
 import semmle.go.frameworks.stdlib.PathFilepath
 import semmle.go.frameworks.stdlib.Reflect
 import semmle.go.frameworks.stdlib.Sync
+import semmle.go.frameworks.stdlib.SyncAtomic
 import semmle.go.frameworks.stdlib.TextScanner
 import semmle.go.frameworks.stdlib.TextTabwriter
 import semmle.go.frameworks.stdlib.TextTemplate
