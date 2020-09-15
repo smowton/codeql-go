@@ -27,6 +27,7 @@ import semmle.go.frameworks.stdlib.EncodingHex
 import semmle.go.frameworks.stdlib.EncodingJson
 import semmle.go.frameworks.stdlib.EncodingPem
 import semmle.go.frameworks.stdlib.EncodingXml
+import semmle.go.frameworks.stdlib.Log
 import semmle.go.frameworks.stdlib.Path
 import semmle.go.frameworks.stdlib.PathFilepath
 import semmle.go.frameworks.stdlib.Reflect
@@ -678,34 +679,6 @@ module Regexp {
     override FunctionInput getSource() { result.isParameter(0) }
 
     override FunctionOutput getResult() { result.isResult() }
-  }
-}
-
-/** Provides models of commonly used functions in the `log` package. */
-module Log {
-  private class LogCall extends LoggerCall::Range, DataFlow::CallNode {
-    LogCall() {
-      exists(string fn |
-        fn.matches("Fatal%")
-        or
-        fn.matches("Panic%")
-        or
-        fn.matches("Print%")
-      |
-        this.getTarget().hasQualifiedName("log", fn)
-        or
-        this.getTarget().(Method).hasQualifiedName("log", "Logger", fn)
-      )
-    }
-
-    override DataFlow::Node getAMessageComponent() { result = this.getAnArgument() }
-  }
-
-  /** A fatal log function, which calls `os.Exit`. */
-  private class FatalLogFunction extends Function {
-    FatalLogFunction() { exists(string fn | fn.matches("Fatal%") | hasQualifiedName("log", fn)) }
-
-    override predicate mayReturnNormally() { none() }
   }
 }
 
