@@ -14,20 +14,24 @@ module GoKit {
   module Endpoint {
     bindingset[result]
     string endpointPackagePath() { result = package("github.com/go-kit/kit", "endpoint") }
+
+    private DataFlow::Node getAnEndpointFactoryResult() {
+      exists(Function mkFn, FunctionOutput res |
+        mkFn.getResultType(0).hasQualifiedName(endpointPackagePath(), "Endpoint") and
+        result = res.getEntryNode(mkFn.getFuncDecl()).getAPredecessor*()
+      )
+    }
+
+    private FuncDef getAnEndpointFunction() {
+      exists(Function endpointFn | endpointFn.getFuncDecl() = result |
+        endpointFn.getARead() = getAnEndpointFactoryResult()
+      )
+      or
+      DataFlow::exprNode(result.(FuncLit)) = getAnEndpointFactoryResult()
+    }
+
     private class EndpointRequest extends UntrustedFlowSource::Range {
-      EndpointRequest() {
-        exists(Function mkFn, FuncDef endpoint, FunctionOutput res |
-          mkFn.getResultType(0).hasQualifiedName(endpointPackagePath(), "Endpoint") and
-          res.isResult() and
-          this = DataFlow::parameterNode(endpoint.getParameter(1))
-        |
-          exists(Function endpointFn | endpointFn.getFuncDecl() = endpoint |
-            endpointFn.getARead().getASuccessor*() = res.getEntryNode(mkFn.getFuncDecl())
-          )
-          or
-          exists(FuncLit endpointLit | DataFlow::exprNode(endpointLit).getASuccessor*() = res.getEntryNode(mkFn.getFuncDecl()))
-        )
-      }
+      EndpointRequest() { this = DataFlow::parameterNode(getAnEndpointFunction().getParameter(1)) }
     }
   }
 }
