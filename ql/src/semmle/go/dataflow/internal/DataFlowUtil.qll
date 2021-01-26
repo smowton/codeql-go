@@ -1079,16 +1079,27 @@ private predicate basicLocalFlowStep(Node nodeFrom, Node nodeTo) {
   )
   or
   // SSA defn -> first SSA use
-  exists(SsaExplicitDefinition pred, IR::Instruction succ | succ = pred.getAFirstUse() |
+  exists(SsaDefinition pred, IR::Instruction succ | succ = pred.getAFirstUse() |
     nodeFrom = MkSsaNode(pred) and
     nodeTo = MkInstructionNode(succ)
   )
   or
   // SSA use -> successive SSA use
-  // Note this case includes Phi node traversal
   exists(IR::Instruction pred, IR::Instruction succ | succ = getAnAdjacentUse(pred) |
     nodeFrom = MkInstructionNode(pred) and
     nodeTo = MkInstructionNode(succ)
+  )
+  or
+  // SSA defn -> phi node without uses in-between:
+  exists(SsaDefinition pred, SsaPhiNode succ | succ = getAnAdjacentDefRedef(pred) |
+    nodeFrom = MkSsaNode(pred) and
+    nodeTo = MkSsaNode(succ)
+  )
+  or
+  // SSA use -> phi node, where the use may reach the phi without intermediate uses:
+  exists(IR::Instruction pred, SsaPhiNode succ | succ = getAnAdjacentRedef(pred) |
+    nodeFrom = MkInstructionNode(pred) and
+    nodeTo = MkSsaNode(succ)
   )
   or
   // GlobalFunctionNode -> use

@@ -414,16 +414,6 @@ private module Internal {
       def.definesAt(b1, i1, v) and
       variableUse(v, use, b2, i2)
     )
-    or
-    exists(
-      SsaSourceVariable v, SsaPhiNode redef, ReachableBasicBlock b1, int i1, ReachableBasicBlock b2,
-      int i2
-    |
-      adjacentVarRefs(v, b1, i1, b2, i2) and
-      def.definesAt(b1, i1, v) and
-      redef.definesAt(b2, i2, v) and
-      firstUse(redef, use)
-    )
   }
 
   /**
@@ -449,15 +439,23 @@ private module Internal {
   cached
   predicate adjacentUseUse(IR::Instruction use1, IR::Instruction use2) {
     adjacentUseUseSameVar(use1, use2)
-    or
-    exists(
-      SsaSourceVariable v, SsaPhiNode def, ReachableBasicBlock b1, int i1, ReachableBasicBlock b2,
-      int i2
-    |
+  }
+
+  cached
+  predicate adjacentDefRedef(SsaDefinition def, SsaPhiNode redef) {
+    exists(SsaSourceVariable v, ReachableBasicBlock b1, int i1, ReachableBasicBlock b2, int i2 |
       adjacentVarRefs(v, b1, i1, b2, i2) and
-      variableUse(v, use1, b1, i1) and
-      def.definesAt(b2, i2, v) and
-      firstUse(def, use2)
+      def.definesAt(b1, i1, v) and
+      redef.definesAt(b2, i2, v)
+    )
+  }
+
+  cached
+  predicate adjacentUseRedef(IR::Instruction use, SsaPhiNode redef) {
+    exists(SsaSourceVariable v, ReachableBasicBlock b1, int i1, ReachableBasicBlock b2, int i2 |
+      adjacentVarRefs(v, b1, i1, b2, i2) and
+      variableUse(v, use, b1, i1) and
+      redef.definesAt(b2, i2, v)
     )
   }
 }

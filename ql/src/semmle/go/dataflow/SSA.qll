@@ -154,6 +154,8 @@ class SsaDefinition extends TSsaDefinition {
   abstract predicate hasLocationInfo(
     string filepath, int startline, int startcolumn, int endline, int endcolumn
   );
+
+  IR::Instruction getAFirstUse() { firstUse(this, result) }
 }
 
 /**
@@ -187,8 +189,6 @@ class SsaExplicitDefinition extends SsaDefinition, TExplicitDef {
   ) {
     getInstruction().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
   }
-
-  IR::Instruction getAFirstUse() { firstUse(this, result) }
 }
 
 /** Provides a helper predicate for working with explicit SSA definitions. */
@@ -409,3 +409,7 @@ DataFlow::Node getASimilarReadNode(DataFlow::Node node) {
 }
 
 IR::Instruction getAnAdjacentUse(IR::Instruction pred) { adjacentUseUse(pred, result) }
+
+SsaPhiNode getAnAdjacentRedef(IR::Instruction pred) { adjacentUseRedef(pred, result) }
+
+SsaPhiNode getAnAdjacentDefRedef(SsaDefinition def) { adjacentDefRedef(def, result) }
