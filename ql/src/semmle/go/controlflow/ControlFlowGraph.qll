@@ -126,6 +126,14 @@ module ControlFlow {
       self.getRhs() = rhs.asInstruction()
     }
 
+    predicate writesInstructionField(IR::Instruction base, IR::FieldTarget trg) {
+      trg = self.getLhs() and
+      (
+        trg.getBase() = base or
+        trg.getBase() = MkImplicitDeref(base.(IR::EvalInstruction).getExpr())
+      )
+    }
+
     /**
      * Holds if this node sets the value of field `f` on `base` (or its implicit dereference) to
      * `rhs`.
@@ -136,13 +144,18 @@ module ControlFlow {
      * node corresponding to `newWidth`.
      */
     predicate writesField(DataFlow::Node base, Field f, DataFlow::Node rhs) {
-      exists(IR::FieldTarget trg | trg = self.getLhs() |
-        (
-          trg.getBase() = base.asInstruction() or
-          trg.getBase() = MkImplicitDeref(base.asExpr())
-        ) and
-        trg.getField() = f and
-        self.getRhs() = rhs.asInstruction()
+      exists(IR::FieldTarget trg |
+        this.writesInstructionField(base.asInstruction(), trg) and
+        f = trg.getField()
+      ) and
+      self.getRhs() = rhs.asInstruction()
+    }
+
+    predicate writesInstructionElement(IR::Instruction base, IR::ElementTarget trg) {
+      trg = self.getLhs() and
+      (
+        trg.getBase() = base or
+        trg.getBase() = MkImplicitDeref(base.(IR::EvalInstruction).getExpr())
       )
     }
 
@@ -156,14 +169,10 @@ module ControlFlow {
      * is the data-flow node corresponding to `base`.
      */
     predicate writesElement(DataFlow::Node base, DataFlow::Node index, DataFlow::Node rhs) {
-      exists(IR::ElementTarget trg | trg = self.getLhs() |
-        (
-          trg.getBase() = base.asInstruction() or
-          trg.getBase() = MkImplicitDeref(base.asExpr())
-        ) and
-        trg.getIndex() = index.asInstruction() and
-        self.getRhs() = rhs.asInstruction()
-      )
+      exists(IR::ElementTarget trg | this.writesInstructionElement(base.asInstruction(), trg) |
+        trg.getIndex() = index.asInstruction()
+      ) and
+      self.getRhs() = rhs.asInstruction()
     }
 
     /**

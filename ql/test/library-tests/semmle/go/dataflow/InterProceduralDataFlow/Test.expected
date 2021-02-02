@@ -14,6 +14,4 @@
 | main.go:39:17:39:25 | "source4" | main.go:20:14:20:14 | x |
 | main.go:46:16:46:24 | "source2" | main.go:10:14:10:14 | x |
 | main.go:53:16:53:24 | "source3" | main.go:10:14:10:14 | x |
-| pointers.go:6:13:6:21 | "source6" | main.go:10:14:10:14 | x |
-| pointers.go:6:13:6:21 | "source6" | pointers.go:15:11:15:12 | star expression |
 | receivers.go:11:12:11:29 | type conversion | receivers.go:6:10:6:13 | recv |

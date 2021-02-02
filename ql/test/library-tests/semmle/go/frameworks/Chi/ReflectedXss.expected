@@ -1,9 +1,6 @@
 edges
-| test.go:13:12:13:16 | implicit dereference : URL | test.go:13:12:13:16 | implicit dereference : URL |
-| test.go:13:12:13:16 | implicit dereference : URL | test.go:13:12:13:16 | selection of URL : pointer type |
 | test.go:13:12:13:16 | implicit dereference : URL | test.go:13:12:13:21 | selection of Path : string |
 | test.go:13:12:13:16 | selection of URL : pointer type | test.go:13:12:13:16 | implicit dereference : URL |
-| test.go:13:12:13:16 | selection of URL : pointer type | test.go:13:12:13:16 | selection of URL : pointer type |
 | test.go:13:12:13:16 | selection of URL : pointer type | test.go:13:12:13:21 | selection of Path : string |
 | test.go:13:12:13:21 | selection of Path : string | test.go:21:18:21:23 | hidden : string |
 | test.go:21:18:21:23 | hidden : string | test.go:21:11:21:24 | type conversion |

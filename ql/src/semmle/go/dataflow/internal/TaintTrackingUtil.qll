@@ -77,7 +77,10 @@ predicate referenceStep(DataFlow::Node pred, DataFlow::Node succ) {
     succ = addr
     or
     // from `&x` to `x`
-    pred = addr and
+    (
+      pred = addr or
+      pred.(DataFlow::PostUpdateNode).getPreUpdateNode() = addr
+    ) and
     succ.(DataFlow::PostUpdateNode).getPreUpdateNode() = addr.getOperand()
   )
   or
@@ -87,7 +90,10 @@ predicate referenceStep(DataFlow::Node pred, DataFlow::Node succ) {
     succ = deref
     or
     // from `*x` to `x`
-    pred = deref and
+    (
+      pred = deref or
+      pred.(DataFlow::PostUpdateNode).getPreUpdateNode() = deref
+    ) and
     succ.(DataFlow::PostUpdateNode).getPreUpdateNode() = deref.getOperand()
   )
 }
@@ -138,6 +144,25 @@ predicate stringConcatStep(DataFlow::Node pred, DataFlow::Node succ) {
 /** Holds if taint flows from `pred` to `succ` via a slice operation. */
 predicate sliceStep(DataFlow::Node pred, DataFlow::Node succ) {
   succ.(DataFlow::SliceNode).getBase() = pred
+  or
+  // Ensure we see any side-effects on the base due to evaluation of the bounds
+  // (e.g. `arr[f(arr):]`, where `f` taints its argument)
+  exists(
+    DataFlow::SliceNode slice, DataFlow::ReadNode baseRead, DataFlow::ReadNode otherRead,
+    SsaVariable readVar
+  |
+    slice.getBase() = baseRead and
+    otherRead.asExpr() =
+      [
+        slice.getLow().asExpr().getAChildExpr*(), slice.getHigh().asExpr().getAChildExpr*(),
+        slice.getMax().asExpr().getAChildExpr*()
+      ] and
+    baseRead.readsSsaVariable(readVar) and
+    otherRead.readsSsaVariable(readVar)
+  |
+    pred.(DataFlow::PostUpdateNode).getPreUpdateNode() = otherRead and
+    succ = baseRead
+  )
 }
 
 /**

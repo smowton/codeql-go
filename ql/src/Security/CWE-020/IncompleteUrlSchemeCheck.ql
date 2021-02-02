@@ -56,5 +56,6 @@ DangerousScheme getAMissingScheme(GVN g) {
 }
 
 from GVN g
+where not g.getANode() instanceof DataFlow::PostUpdateNode
 select schemeCheck(g, "javascript"),
   "This check does not consider " + strictconcat(getAMissingScheme(g), " and ") + "."

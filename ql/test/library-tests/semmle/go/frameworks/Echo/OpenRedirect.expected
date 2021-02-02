@@ -1,8 +1,6 @@
 edges
 | test.go:170:11:170:32 | call to Param : string | test.go:171:20:171:24 | param |
 | test.go:176:11:176:32 | call to Param : string | test.go:183:20:183:29 | ...+... |
-| test.go:191:10:191:26 | selection of URL : pointer type | test.go:191:10:191:26 | selection of URL : pointer type |
-| test.go:191:10:191:26 | selection of URL : pointer type | test.go:191:10:191:26 | selection of URL : pointer type |
 | test.go:191:10:191:26 | selection of URL : pointer type | test.go:194:21:194:32 | call to String |
 | test.go:191:10:191:26 | selection of URL : pointer type | test.go:194:21:194:32 | call to String |
 nodes

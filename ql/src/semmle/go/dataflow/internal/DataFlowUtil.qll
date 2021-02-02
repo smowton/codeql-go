@@ -6,11 +6,53 @@ import go
 import semmle.go.dataflow.FunctionInputsAndOutputs
 private import DataFlowPrivate
 
+private IR::Instruction getNonReceiverArgumentInstruction(CallExpr expr, int i) {
+  if expr.getArgument(0).getType() instanceof TupleType
+  then
+    result = IR::extractTupleElement(IR::evalExprInstruction(expr.getArgument(0).stripParens()), i)
+  else
+    result =
+      rank[i + 1](Expr arg, int j |
+        arg = expr.getArgument(j)
+      |
+        IR::evalExprInstruction(arg.stripParens()) order by j
+      )
+}
+
+private IR::Instruction getReceiverInstruction(CallExpr expr) {
+  exists(IR::MethodReadInstruction methodRead |
+    methodRead = IR::evalExprInstruction(expr.getCalleeExpr()) and
+    result = methodRead.getReceiver()
+  )
+}
+
+private IR::Instruction getCallInstructionArgument(IR::EvalInstruction callInst, int i) {
+  result = getNonReceiverArgumentInstruction(callInst.getExpr(), i)
+  or
+  i = -1 and result = getReceiverInstruction(callInst.getExpr())
+}
+
 cached
 private newtype TNode =
   MkInstructionNode(IR::Instruction insn) or
   MkSsaNode(SsaDefinition ssa) or
-  MkGlobalFunctionNode(Function f)
+  MkGlobalFunctionNode(Function f) or
+  MkLitPreInitNode(CompositeLit cl) or
+  MkPostUpdateNode(IR::Instruction insn) {
+    (
+      insn = IR::evalExprInstruction(any(AddressExpr e))
+      or
+      insn = IR::evalExprInstruction(any(AddressExpr e).getOperand())
+      or
+      insn = any(PointerDereferenceInstruction i).getOperand()
+      or
+      insn = getAWrittenInstruction()
+      or
+      insn = getCallInstructionArgument(_, _) and
+      mutableType(insn.getResultType())
+    ) and
+    not insn.(IR::EvalInstruction).getExpr() instanceof CompositeLit
+  }
 
 /**
  * A node in a data flow graph.
@@ -382,12 +424,7 @@ class CallNode extends ExprNode {
    * For calls of the form `f(g())` where `g` has multiple results, the arguments of the call to
    * `i` are the (implicit) element extraction nodes for the call to `g`.
    */
-  Node getArgument(int i) {
-    if expr.getArgument(0).getType() instanceof TupleType
-    then result = extractTupleElement(exprNode(expr.getArgument(0)), i)
-    else
-      result = rank[i + 1](Expr arg, int j | arg = expr.getArgument(j) | exprNode(arg) order by j)
-  }
+  Node getArgument(int i) { result = instructionNode(getNonReceiverArgumentInstruction(expr, i)) }
 
   /** Gets the data flow node corresponding to an argument of this call. */
   Node getAnArgument() { result = this.getArgument(_) }
@@ -461,17 +498,26 @@ class ReceiverNode extends ParameterNode {
   predicate isReceiverOf(MethodDecl m) { parm.isReceiverOf(m) }
 }
 
-private Node getADirectlyWrittenNode() {
-  exists(Write w | w.writesField(result, _, _) or w.writesElement(result, _, _))
+private IR::Instruction getADirectlyWrittenInstruction() {
+  exists(Write w | w.writesInstructionField(result, _) or w.writesInstructionElement(result, _))
 }
 
-private DataFlow::Node getAccessPathPredecessor(DataFlow::Node node) {
-  result = node.(PointerDereferenceNode).getOperand()
+private IR::Instruction getAccessPathPredecessor(IR::Instruction i) {
+  result = i.(PointerDereferenceInstruction).getOperand()
   or
-  result = node.(ComponentReadNode).getBase()
+  result = i.(IR::ComponentReadInstruction).getBase()
 }
 
-private Node getAWrittenNode() { result = getAccessPathPredecessor*(getADirectlyWrittenNode()) }
+private IR::Instruction getAWrittenInstruction() {
+  result = getAccessPathPredecessor*(getADirectlyWrittenInstruction())
+}
+
+abstract class PostUpdateNode extends Node {
+  /**
+   * Gets the node before the state update.
+   */
+  abstract Node getPreUpdateNode();
+}
 
 /**
  * A node associated with an object after an operation that might have
@@ -485,34 +531,68 @@ private Node getAWrittenNode() { result = getAccessPathPredecessor*(getADirectly
  * to the value before the update with the exception of `ClassInstanceExpr`,
  * which represents the value after the constructor has run.
  */
-class PostUpdateNode extends Node {
-  Node preupd;
+class RealPostUpdateNode extends PostUpdateNode, MkPostUpdateNode {
+  InstructionNode preupd;
 
-  PostUpdateNode() {
-    (
-      preupd instanceof AddressOperationNode
-      or
-      preupd = any(AddressOperationNode addr).getOperand()
-      or
-      preupd = any(PointerDereferenceNode deref).getOperand()
-      or
-      preupd = getAWrittenNode()
-      or
-      preupd instanceof ArgumentNode and
-      mutableType(preupd.getType())
-    ) and
-    (
-      preupd = this.(SsaNode).getAUse()
-      or
-      preupd = this and
-      not basicLocalFlowStep(_, this)
-    )
+  RealPostUpdateNode() { this = MkPostUpdateNode(preupd.asInstruction()) }
+
+  override string toString() { result = preupd.toString() + " [post-update]" }
+
+  override Expr asExpr() { result = getPreUpdateNode().asExpr() }
+
+  override predicate hasLocationInfo(
+    string filepath, int startline, int startcolumn, int endline, int endcolumn
+  ) {
+    getPreUpdateNode().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
   }
 
-  /**
-   * Gets the node before the state update.
-   */
-  Node getPreUpdateNode() { result = preupd }
+  override ControlFlow::Root getRoot() { result = getPreUpdateNode().getRoot() }
+
+  override Type getType() { result = getPreUpdateNode().getType() }
+
+  override Parameter asParameter() { result = getPreUpdateNode().asParameter() }
+
+  override IR::Instruction asInstruction() { result = getPreUpdateNode().asInstruction() }
+
+  override string getNodeKind() {
+    result = "post-update node for " + getPreUpdateNode().getNodeKind()
+  }
+
+  override Node getPreUpdateNode() { result = preupd }
+}
+
+class LitPreInitNode extends MkLitPreInitNode, Node {
+  CompositeLit cl;
+
+  LitPreInitNode() { this = MkLitPreInitNode(cl) }
+
+  override predicate hasLocationInfo(
+    string filepath, int startline, int startcolumn, int endline, int endcolumn
+  ) {
+    cl.hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
+  }
+
+  override ControlFlow::Root getRoot() { result.isRootOf(cl) }
+
+  override Type getType() { result = cl.getType() }
+
+  override Expr asExpr() { result = cl }
+
+  override Parameter asParameter() { none() }
+
+  override IR::Instruction asInstruction() { none() }
+
+  override string getNodeKind() { result = "pre-init node for " + cl }
+
+  override string toString() { result = cl.toString() + " [pre-init]" }
+
+  CompositeLit getCompositeLit() { result = cl }
+}
+
+class CompositeLitNode extends ExprNode, PostUpdateNode {
+  override CompositeLit expr;
+
+  override Node getPreUpdateNode() { result.(LitPreInitNode).getCompositeLit() = expr }
 }
 
 /**
@@ -807,16 +887,30 @@ class UnaryOperationNode extends InstructionNode {
 }
 
 /**
+ * An instruction that dereferences a pointer.
+ */
+class PointerDereferenceInstruction extends IR::Instruction {
+  PointerDereferenceInstruction() {
+    this = IR::evalExprInstruction(any(StarExpr e)) or
+    this = IR::evalExprInstruction(any(DerefExpr e)) or
+    this instanceof IR::EvalImplicitDerefInstruction
+  }
+
+  IR::Instruction getOperand() {
+    exists(Expr e |
+      e = this.(IR::EvalInstruction).getExpr().getChildExpr(0) or
+      e = this.(IR::EvalImplicitDerefInstruction).getOperand()
+    |
+      result = IR::evalExprInstruction(e)
+    )
+  }
+}
+
+/**
  * A data-flow node that dereferences a pointer.
  */
 class PointerDereferenceNode extends UnaryOperationNode {
-  PointerDereferenceNode() {
-    asExpr() instanceof StarExpr
-    or
-    asExpr() instanceof DerefExpr
-    or
-    insn instanceof IR::EvalImplicitDerefInstruction
-  }
+  PointerDereferenceNode() { asInstruction() instanceof PointerDereferenceInstruction }
 }
 
 /**
@@ -1064,7 +1158,10 @@ private predicate basicLocalFlowStep(Node nodeFrom, Node nodeTo) {
   // Instruction -> SSA defn
   exists(IR::Instruction pred, SsaExplicitDefinition succ |
     succ.getRhs() = pred and
-    nodeFrom = MkInstructionNode(pred) and
+    (
+      nodeFrom = MkInstructionNode(pred) or
+      nodeFrom.(PostUpdateNode).getPreUpdateNode() = MkInstructionNode(pred)
+    ) and
     nodeTo = MkSsaNode(succ)
   )
   or
@@ -1086,7 +1183,7 @@ private predicate basicLocalFlowStep(Node nodeFrom, Node nodeTo) {
   or
   // SSA use -> successive SSA use
   exists(IR::Instruction pred, IR::Instruction succ | succ = getAnAdjacentUse(pred) |
-    nodeFrom = MkInstructionNode(pred) and
+    (nodeFrom = MkInstructionNode(pred) or nodeFrom = MkPostUpdateNode(pred)) and
     nodeTo = MkInstructionNode(succ)
   )
   or
@@ -1098,7 +1195,7 @@ private predicate basicLocalFlowStep(Node nodeFrom, Node nodeTo) {
   or
   // SSA use -> phi node, where the use may reach the phi without intermediate uses:
   exists(IR::Instruction pred, SsaPhiNode succ | succ = getAnAdjacentRedef(pred) |
-    nodeFrom = MkInstructionNode(pred) and
+    (nodeFrom = MkInstructionNode(pred) or nodeFrom = MkPostUpdateNode(pred)) and
     nodeTo = MkSsaNode(succ)
   )
   or

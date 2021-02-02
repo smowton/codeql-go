@@ -113,7 +113,13 @@ predicate storeStep(Node node1, Content c, PostUpdateNode node2) {
   // which in turn flows into the pointer content of `p`
   exists(Write w, Field f, DataFlow::Node base, DataFlow::Node rhs | w.writesField(base, f, rhs) |
     node1 = rhs and
-    node2.getPreUpdateNode() = base and
+    (
+      node2.getPreUpdateNode() = base
+      or
+      // Special case: CompositeLitNodes are their own PostUpdateNode, so they are
+      // both the target of the write and that of the storeStep.
+      node2.(CompositeLitNode) = base
+    ) and
     c = TFieldContent(f)
     or
     node1 = base and
@@ -121,7 +127,7 @@ predicate storeStep(Node node1, Content c, PostUpdateNode node2) {
     c = TPointerContent(node2.getType())
   )
   or
-  node1 = node2.(AddressOperationNode).getOperand() and
+  node1 = node2.getPreUpdateNode().(AddressOperationNode).getOperand() and
   c = TPointerContent(node2.getType())
 }
 

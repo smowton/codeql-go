@@ -1,8 +1,8 @@
 edges
-| test.go:26:6:26:10 | definition of bound : bindMe | test.go:28:13:28:30 | type conversion |
-| test.go:26:6:26:10 | definition of bound : bindMe | test.go:29:13:29:27 | type conversion |
-| test.go:26:6:26:10 | definition of bound : bindMe | test.go:30:13:30:29 | type conversion |
-| test.go:26:6:26:10 | definition of bound : bindMe | test.go:30:20:30:26 | selection of c : subBindMe |
+| test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:28:13:28:30 | type conversion |
+| test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:29:13:29:27 | type conversion |
+| test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:30:13:30:29 | type conversion |
+| test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:30:20:30:26 | selection of c : subBindMe |
 | test.go:30:20:30:26 | selection of c : subBindMe | test.go:30:13:30:29 | type conversion |
 | test.go:35:20:35:42 | call to Cookie : string | test.go:35:13:35:43 | type conversion |
 | test.go:40:20:40:31 | call to Data : map type | test.go:40:13:40:52 | type conversion |
@@ -30,15 +30,13 @@ edges
 | test.go:216:2:216:34 | ... := ...[1] : pointer type | test.go:217:14:217:32 | type conversion |
 | test.go:216:2:216:34 | ... := ...[1] : pointer type | test.go:217:21:217:22 | implicit dereference : FileHeader |
 | test.go:217:21:217:22 | implicit dereference : FileHeader | test.go:217:14:217:32 | type conversion |
-| test.go:217:21:217:22 | implicit dereference : FileHeader | test.go:217:21:217:22 | implicit dereference : FileHeader |
 | test.go:221:2:221:40 | ... := ...[0] : slice type | test.go:222:14:222:38 | type conversion |
 | test.go:221:2:221:40 | ... := ...[0] : slice type | test.go:222:21:222:28 | implicit dereference : FileHeader |
 | test.go:222:21:222:28 | implicit dereference : FileHeader | test.go:222:14:222:38 | type conversion |
-| test.go:222:21:222:28 | implicit dereference : FileHeader | test.go:222:21:222:28 | implicit dereference : FileHeader |
 | test.go:224:7:224:28 | call to GetString : string | test.go:225:14:225:22 | type conversion |
 | test.go:227:8:227:35 | call to GetStrings : slice type | test.go:228:14:228:26 | type conversion |
 | test.go:230:9:230:17 | call to Input : Values | test.go:231:14:231:27 | type conversion |
-| test.go:233:6:233:8 | definition of str : myStruct | test.go:235:14:235:30 | type conversion |
+| test.go:234:14:234:16 | str [post-update] : myStruct | test.go:235:14:235:30 | type conversion |
 | test.go:239:15:239:36 | call to GetString : string | test.go:242:21:242:29 | untrusted |
 | test.go:252:23:252:44 | call to GetCookie : string | test.go:252:16:252:45 | type conversion |
 | test.go:263:62:263:83 | call to GetCookie : string | test.go:263:55:263:84 | type conversion |
@@ -71,7 +69,6 @@ edges
 | test.go:268:2:268:40 | ... := ...[0] : slice type | test.go:296:21:296:78 | implicit dereference : FileHeader |
 | test.go:268:2:268:40 | ... := ...[0] : slice type | test.go:296:21:296:87 | selection of Filename |
 | test.go:276:44:276:51 | implicit dereference : FileHeader | test.go:276:21:276:61 | call to GetDisplayString |
-| test.go:276:44:276:51 | implicit dereference : FileHeader | test.go:276:44:276:51 | implicit dereference : FileHeader |
 | test.go:277:21:277:83 | implicit dereference : FileHeader | test.go:277:21:277:92 | selection of Filename |
 | test.go:278:21:278:87 | implicit dereference : FileHeader | test.go:278:21:278:96 | selection of Filename |
 | test.go:283:3:285:71 | implicit dereference : FileHeader | test.go:283:3:285:80 | selection of Filename |
@@ -88,7 +85,7 @@ edges
 | test.go:302:15:302:36 | call to GetString : string | test.go:304:21:304:48 | type assertion |
 | test.go:302:15:302:36 | call to GetString : string | test.go:305:21:305:52 | type assertion |
 nodes
-| test.go:26:6:26:10 | definition of bound : bindMe | semmle.label | definition of bound : bindMe |
+| test.go:27:13:27:17 | bound [post-update] : bindMe | semmle.label | bound [post-update] : bindMe |
 | test.go:28:13:28:30 | type conversion | semmle.label | type conversion |
 | test.go:29:13:29:27 | type conversion | semmle.label | type conversion |
 | test.go:30:13:30:29 | type conversion | semmle.label | type conversion |
@@ -147,7 +144,7 @@ nodes
 | test.go:228:14:228:26 | type conversion | semmle.label | type conversion |
 | test.go:230:9:230:17 | call to Input : Values | semmle.label | call to Input : Values |
 | test.go:231:14:231:27 | type conversion | semmle.label | type conversion |
-| test.go:233:6:233:8 | definition of str : myStruct | semmle.label | definition of str : myStruct |
+| test.go:234:14:234:16 | str [post-update] : myStruct | semmle.label | str [post-update] : myStruct |
 | test.go:235:14:235:30 | type conversion | semmle.label | type conversion |
 | test.go:239:15:239:36 | call to GetString : string | semmle.label | call to GetString : string |
 | test.go:242:21:242:29 | untrusted | semmle.label | untrusted |
@@ -190,9 +187,9 @@ nodes
 | test.go:304:21:304:48 | type assertion | semmle.label | type assertion |
 | test.go:305:21:305:52 | type assertion | semmle.label | type assertion |
 #select
-| test.go:28:13:28:30 | type conversion | test.go:26:6:26:10 | definition of bound : bindMe | test.go:28:13:28:30 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:26:6:26:10 | definition of bound | user-provided value |
-| test.go:29:13:29:27 | type conversion | test.go:26:6:26:10 | definition of bound : bindMe | test.go:29:13:29:27 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:26:6:26:10 | definition of bound | user-provided value |
-| test.go:30:13:30:29 | type conversion | test.go:26:6:26:10 | definition of bound : bindMe | test.go:30:13:30:29 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:26:6:26:10 | definition of bound | user-provided value |
+| test.go:28:13:28:30 | type conversion | test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:28:13:28:30 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:27:13:27:17 | bound [post-update] | user-provided value |
+| test.go:29:13:29:27 | type conversion | test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:29:13:29:27 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:27:13:27:17 | bound [post-update] | user-provided value |
+| test.go:30:13:30:29 | type conversion | test.go:27:13:27:17 | bound [post-update] : bindMe | test.go:30:13:30:29 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:27:13:27:17 | bound [post-update] | user-provided value |
 | test.go:35:13:35:43 | type conversion | test.go:35:20:35:42 | call to Cookie : string | test.go:35:13:35:43 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:35:20:35:42 | call to Cookie | user-provided value |
 | test.go:40:13:40:52 | type conversion | test.go:40:20:40:31 | call to Data : map type | test.go:40:13:40:52 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:40:20:40:31 | call to Data | user-provided value |
 | test.go:45:13:45:53 | type conversion | test.go:45:20:45:43 | call to GetData : interface type | test.go:45:13:45:53 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:45:20:45:43 | call to GetData | user-provided value |
@@ -221,7 +218,7 @@ nodes
 | test.go:225:14:225:22 | type conversion | test.go:224:7:224:28 | call to GetString : string | test.go:225:14:225:22 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:224:7:224:28 | call to GetString | user-provided value |
 | test.go:228:14:228:26 | type conversion | test.go:227:8:227:35 | call to GetStrings : slice type | test.go:228:14:228:26 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:227:8:227:35 | call to GetStrings | user-provided value |
 | test.go:231:14:231:27 | type conversion | test.go:230:9:230:17 | call to Input : Values | test.go:231:14:231:27 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:230:9:230:17 | call to Input | user-provided value |
-| test.go:235:14:235:30 | type conversion | test.go:233:6:233:8 | definition of str : myStruct | test.go:235:14:235:30 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:233:6:233:8 | definition of str | user-provided value |
+| test.go:235:14:235:30 | type conversion | test.go:234:14:234:16 | str [post-update] : myStruct | test.go:235:14:235:30 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:234:14:234:16 | str [post-update] | user-provided value |
 | test.go:242:21:242:29 | untrusted | test.go:239:15:239:36 | call to GetString : string | test.go:242:21:242:29 | untrusted | Cross-site scripting vulnerability due to $@. | test.go:239:15:239:36 | call to GetString | user-provided value |
 | test.go:252:16:252:45 | type conversion | test.go:252:23:252:44 | call to GetCookie : string | test.go:252:16:252:45 | type conversion | Cross-site scripting vulnerability due to $@. | test.go:252:23:252:44 | call to GetCookie | user-provided value |
 | test.go:257:16:257:37 | call to GetCookie | test.go:257:16:257:37 | call to GetCookie | test.go:257:16:257:37 | call to GetCookie | Cross-site scripting vulnerability due to $@. | test.go:257:16:257:37 | call to GetCookie | user-provided value |

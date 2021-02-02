@@ -3,7 +3,6 @@ edges
 | TaintedPath.go:10:10:10:14 | selection of URL : pointer type | TaintedPath.go:17:28:17:61 | call to Join |
 | tst.go:14:22:14:39 | call to FormFile : tuple type | tst.go:17:41:17:47 | implicit dereference : FileHeader |
 | tst.go:14:22:14:39 | call to FormFile : tuple type | tst.go:17:41:17:56 | selection of Filename |
-| tst.go:17:41:17:47 | implicit dereference : FileHeader | tst.go:17:41:17:47 | implicit dereference : FileHeader |
 | tst.go:17:41:17:47 | implicit dereference : FileHeader | tst.go:17:41:17:56 | selection of Filename |
 nodes
 | TaintedPath.go:10:10:10:14 | selection of URL : pointer type | semmle.label | selection of URL : pointer type |
