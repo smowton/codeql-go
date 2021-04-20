@@ -41,3 +41,11 @@ func ServeJsonDirect(w http.ResponseWriter, r http.Request) {
 	w.Write(noLongerTainted)
 
 }
+
+func QueryMapTest(w http.ResponseWriter, r http.Request) {
+	keys, ok := r.URL.Query()["data_id"]
+	if ok && len(keys[0]) > 0 {
+		key := keys[0]
+		w.Write([]byte(key))
+	}
+}
